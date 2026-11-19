@@ -1,40 +1,27 @@
 
-name: Build TENZZXN MODS APK
+      - name: Fix Java Kotlin JVM target
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
 
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
+          p = Path("source/SHRunner/app/build.gradle.kts")
+          s = p.read_text()
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+          s = s.replace(
+              "android {",
+              """android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          """,
+              1
+          )
 
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Setup Gradle 8.11.1
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.11.1'
-
-      - name: Extract Android project
-        run: unzip -q TENZZXN-MODS-GitHub-Build.zip -d source
-
-      - name: Build APK
-        run: gradle -p source/SHRunner :app:assembleDebug --no-daemon --console=plain
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: TENZZXN-MODS-APK
-          path: source/SHRunner/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+          p.write_text(s)
+          PY
           
